@@ -31,41 +31,18 @@ using namespace std;
 
 namespace cvb
 {
+  const char movesE[4][3][4] = { { {-1, -1, 3, CV_CHAINCODE_UP_LEFT   }, { 0, -1, 0, CV_CHAINCODE_UP   }, { 1, -1, 0, CV_CHAINCODE_UP_RIGHT   } },
+				 { { 1, -1, 0, CV_CHAINCODE_UP_RIGHT  }, { 1,  0, 1, CV_CHAINCODE_RIGHT}, { 1,  1, 1, CV_CHAINCODE_DOWN_RIGHT } },
+				 { { 1,  1, 1, CV_CHAINCODE_DOWN_RIGHT}, { 0,  1, 2, CV_CHAINCODE_DOWN }, {-1,  1, 2, CV_CHAINCODE_DOWN_LEFT  } },
+				 { {-1,  1, 2, CV_CHAINCODE_DOWN_LEFT }, {-1,  0, 3, CV_CHAINCODE_LEFT }, {-1, -1, 3, CV_CHAINCODE_UP_LEFT    } }
+  };
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
-  // Based on http://en.wikipedia.org/wiki/Disjoint-set_data_structure
-  void makeSet(CvBlob *x)
-  {
-    x->_parent=NULL;
-    x->_rank=0;
-  }
+  const char movesI[4][3][4] = { { { 1, -1, 3, CV_CHAINCODE_UP_RIGHT   }, { 0, -1, 0, CV_CHAINCODE_UP   }, {-1, -1, 0, CV_CHAINCODE_UP_LEFT    } },
+				 { {-1, -1, 0, CV_CHAINCODE_UP_LEFT    }, {-1,  0, 1, CV_CHAINCODE_LEFT }, {-1,  1, 1, CV_CHAINCODE_DOWN_LEFT  } },
+				 { {-1,  1, 1, CV_CHAINCODE_DOWN_LEFT  }, { 0,  1, 2, CV_CHAINCODE_DOWN }, { 1,  1, 2, CV_CHAINCODE_DOWN_RIGHT } },
+				 { { 1,  1, 2, CV_CHAINCODE_DOWN_RIGHT }, { 1,  0, 3, CV_CHAINCODE_RIGHT}, { 1, -1, 3, CV_CHAINCODE_UP_RIGHT   } }
+  };
 
-  CvBlob *find(CvBlob *x)
-  {
-    if (!x->_parent) return x;
-    else
-    {
-      x->_parent=find(x->_parent);
-      return x->_parent;
-    }
-  }
-
-  void merge(CvBlob *x, CvBlob *y)
-  {
-    CvBlob *xRoot=find(x);
-    CvBlob *yRoot=find(y);
-
-    if (xRoot->_rank > yRoot->_rank)
-      yRoot->_parent=xRoot;
-    else if (xRoot->_rank < yRoot->_rank)
-      xRoot->_parent=yRoot;
-    else if (xRoot!=yRoot)
-    {
-      yRoot->_parent=xRoot;
-      xRoot->_rank+=1;
-    }
-  }
-  ///////////////////////////////////////////////////////////////////////////////////////////////////
 
   unsigned int cvLabel (IplImage *img, IplImage *imgOut, CvBlobs &blobs)
   {
@@ -77,7 +54,6 @@ namespace cvb
 
       int numPixels=0;
 
-      //IplImage *imgOut=cvCreateImage (cvGetSize(img),IPL_DEPTH_LABEL,1);
       cvSetZero(imgOut);
 
       CvLabel label=0;
@@ -107,210 +83,224 @@ namespace cvb
       char *imgDataIn = img->imageData + imgIn_offset;
       CvLabel *imgDataOut = (CvLabel *)imgOut->imageData + imgOut_offset;
 
-      // Check first pixel (0, 0)
-      if (imgDataIn[0])
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define imageIn(X, Y) imgDataIn[(X) + (Y)*stepIn]
+#define imageOut(X, Y) imgDataOut[(X) + (Y)*stepOut]
+
+      unsigned int x;
+      unsigned int y = 0;
+      do
       {
-	label++;
+	x=0;
 
-	CvBlob *blob=new CvBlob;
-	makeSet(blob);
-	blob->label=label;
-	blob->area=1;
-	blob->minx=0; blob->maxx=0;
-	blob->miny=0; blob->maxy=0;
-	blob->m10=0; blob->m01=0;
-	blob->m11=0*0;
-	blob->m20=0*0; blob->m02=0*0;
-	blob->centralMoments=false;
-	blobs.insert(CvLabelBlob(label,blob));
-
-	imgDataOut[0]=label;
-      }
-
-      // Check first row (c, 0)
-      for (unsigned int c=1;c<(unsigned int)imgIn_width;c++)
-      {
-	if (imgDataIn[c])
+	do
 	{
-	  numPixels++;
-	  if (imgDataOut[c-1])
+	  if (imageIn(x, y))
 	  {
-	    CvBlob *blob=blobs[imgDataOut[c-1]];
-	    blob->area+=1;
-	    blob->maxx=MAX(blob->maxx,c);
-	    blob->m10+=c; blob->m01+=0;
-	    blob->m11+=c*0;
-	    blob->m20+=c*c; blob->m02+=0*0;
-
-	    imgDataOut[c]=imgDataOut[c-1];
-	  }
-	  else
-	  {
-	    label++;
-
-	    CvBlob *blob=new CvBlob;
-	    makeSet(blob);
-	    blob->label=label;
-	    blob->area=1;
-	    blob->minx=c; blob->maxx=c;
-	    blob->miny=0; blob->maxy=0;
-	    blob->m10=c; blob->m01=0;
-	    blob->m11=c*0;
-	    blob->m20=c*c; blob->m02=0*0;
-	    blob->centralMoments=false;
-	    blobs.insert(CvLabelBlob(label,blob));
-
-	    imgDataOut[c]=label;
-	  }
-	}
-      }
-
-      CvLabel *lastRowOut=(CvLabel *)imgOut->imageData + imgOut_offset;
-
-      imgDataIn+=stepIn;
-      imgDataOut+=stepOut;
-
-      for (unsigned int r=1;r<(unsigned int)imgIn_height;r++,
-	  lastRowOut+=stepOut,imgDataIn+=stepIn,imgDataOut+=stepOut)
-      {
-	if (imgDataIn[0])
-	{
-	  numPixels++;
-	  if (lastRowOut[0])
-	  {
-	    CvBlob *blob=blobs[lastRowOut[0]];
-	    blob->area+=1;
-	    blob->maxy=MAX(blob->maxy,r);
-	    blob->m10+=0; blob->m01+=r;
-	    blob->m11+=0*r;
-	    blob->m20+=0*0; blob->m02+=r*r;
-
-	    imgDataOut[0]=lastRowOut[0];
-	  }
-	  else
-	  {
-	    label++;
-
-	    CvBlob *blob=new CvBlob;
-	    makeSet(blob);
-	    blob->label=label;
-	    blob->area=1;
-	    blob->minx=0; blob->maxx=0;
-	    blob->miny=r; blob->maxy=r;
-	    blob->m10=0; blob->m01=r;
-	    blob->m11=0*r;
-	    blob->m20=0*0; blob->m02=r*r;
-	    blob->centralMoments=false;
-	    blobs.insert(CvLabelBlob(label,blob));
-
-	    imgDataOut[0]=label;
-	  }
-	}
-
-	for (unsigned int c=1;c<(unsigned int)imgIn_width;c++)
-	{
-	  if (imgDataIn[c])
-	  {
-	    numPixels++;
-	    if (lastRowOut[c])
+	    if ((!imageOut(x, y))&&((y==0)||(imageIn(x, y-1)==0)))
 	    {
-	      CvBlob *blob=blobs[lastRowOut[c]];
-	      blob->area+=1;
-	      blob->maxy=MAX(blob->maxy,r);
-	      blob->m10+=c; blob->m01+=r;
-	      blob->m11+=c*r;
-	      blob->m20+=c*c; blob->m02+=r*r;
-
-	      imgDataOut[c]=lastRowOut[c];
-
-	      if ((imgDataOut[c-1])&&(imgDataOut[c]!=imgDataOut[c-1]))
-	      {
-		CvBlob *blob1=blobs[imgDataOut[c]];
-		CvBlob *blob2=blobs[imgDataOut[c-1]];
-
-		merge(blob1,blob2);
-	      }
-	    }
-	    else if (imgDataOut[c-1])
-	    {
-	      CvBlob *blob=blobs[imgDataOut[c-1]];
-	      blob->area+=1;
-	      blob->maxx=MAX(blob->maxx,c);
-	      blob->m10+=c; blob->m01+=r;
-	      blob->m11+=c*r;
-	      blob->m20+=c*c; blob->m02+=r*r;
-
-	      imgDataOut[c]=imgDataOut[c-1];
-	    }
-	    else
-	    {
+	      cout << "Encontrado contorno: " << x << ", " << y << endl;
+	      // Label contour.
 	      label++;
 
-	      CvBlob *blob=new CvBlob;
-	      makeSet(blob);
-	      blob->label=label;
-	      blob->area=1;
-	      blob->minx=c; blob->maxx=c;
-	      blob->miny=r; blob->maxy=r;
-	      blob->m10=c; blob->m01=r;
-	      blob->m11=c*r;
-	      blob->m20=c*c; blob->m02=r*r;
+	      imageOut(x, y) = label;
+
+	      CvBlob *blob = new CvBlob;
+	      blob->label = label;
+	      blob->area = 1;
+	      blob->minx = x; blob->maxx = x;
+	      blob->miny = y; blob->maxy = y;
+	      blob->m10=x; blob->m01=y;
+	      blob->m11=x*y;
+	      blob->m20=x*x; blob->m02=y*y;
 	      blob->centralMoments=false;
 	      blobs.insert(CvLabelBlob(label,blob));
+	      cout << "(((((((((((((((((((((((((((((( " << label << ", " << blob << endl;
 
-	      imgDataOut[c]=label;
+	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	      blob->contour.startingPoint = cvPoint(x, y);
+
+	      unsigned char direction=1;
+	      unsigned int xx = x;
+	      unsigned int yy = y;
+
+	      do
+	      {
+		for (unsigned int numAttempts=0; numAttempts<3; numAttempts++)
+		{
+		  bool found = false;
+
+		  for (unsigned char i=0; i<3; i++)
+		  {
+		    int nx = xx+movesE[direction][i][0];
+		    int ny = yy+movesE[direction][i][1];
+		    if ((nx<=imgIn_width)&&(nx>=0)&&(ny<=imgIn_height)&&(ny>=0))
+		    {
+		      if (imageIn(nx, ny))
+		      {
+			found = true;
+
+			blob->contour.chainCode.push_back(movesE[direction][i][3]);
+
+			xx=nx;
+			yy=ny;
+
+			direction=movesE[direction][i][2];
+			break;
+		      }
+		      else
+		      {
+			imageOut(nx, ny) = -1;
+		      }
+		    }
+		  }
+
+		  if (!found)
+		    direction=(direction+1)%4;
+		  else
+		  {
+		    imageOut(xx, yy) = label;
+
+		    if (xx<blob->minx) blob->minx = xx;
+		    else if (xx>blob->maxx) blob->maxx = xx;
+		    if (yy<blob->miny) blob->miny = yy;
+		    else if (yy>blob->maxy) blob->maxy = yy;
+
+		    blob->area++;
+		    blob->m10+=xx; blob->m01+=yy;
+		    blob->m11+=xx*yy;
+		    blob->m20+=xx*xx; blob->m02+=yy*yy;
+
+		    break;
+		  }
+		}
+	      }
+	      while (!(xx==x && yy==y));
+	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	      label++;
+	    }
+	    else if ((y+1<=imgIn_height)&&(!imageIn(x, y+1))) // FIXME Añadir condición.
+	    {
+	      cout << "Encontrado contorno interno: " << x << ", " << y << endl;
+	      // Label internal contour
+
+	      CvLabel l;
+	      CvBlob *blob = NULL;
+
+	      if (imageOut(x, y))
+	      {
+		l = imageOut(x, y);
+
+		blob = blobs[l];
+	      }
+	      else
+	      {
+		l = imageOut(x-1, y); // XXX x-1 is always inside the image?
+
+		imageOut(x, y) = l;
+		blob = blobs[l];
+		blob->area++;
+		blob->m10+=x; blob->m01+=y;
+		blob->m11+=x*y;
+		blob->m20+=x*x; blob->m02+=y*y;
+	      }
+
+	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	      CvContourChainCode *contour = new CvContourChainCode;
+	      cout << "-------------------------------------------------------------------------------------------------------" << endl;
+	      //blob->internalContours.push_back(contour);
+
+	      contour->startingPoint = cvPoint(x, y);
+
+	      unsigned char direction=1;
+	      unsigned int xx = x;
+	      unsigned int yy = y;
+
+	      do
+	      {
+		for (unsigned int numAttempts=0; numAttempts<3; numAttempts++)
+		{
+		  bool found = false;
+
+		  for (unsigned char i=0; i<3; i++)
+		  {
+		    int nx = xx+movesI[direction][i][0];
+		    int ny = yy+movesI[direction][i][1];
+		    if (imageIn(nx, ny))
+		    {
+		      found = true;
+
+		      contour->chainCode.push_back(movesI[direction][i][3]);
+
+		      xx=nx;
+		      yy=ny;
+
+		      direction=movesI[direction][i][2];
+		      break;
+		    }
+		    else
+		    {
+		      imageOut(nx, ny) = -1;
+		    }
+		  }
+
+		  if (!found)
+		    direction=(direction+1)%4;
+		  else
+		  {
+		    cout << "  Coordenadas: " << xx << ", " << yy << "       Dirección: " << (unsigned int)direction << endl;
+		    if (!imageOut(xx, yy))
+		    {
+		      cout << "  Pixel interno: " << xx << ", " << yy << endl;
+		      imageOut(xx, yy) = l;
+
+		      blob->area++;
+		      blob->m10+=xx; blob->m01+=yy;
+		      blob->m11+=xx*yy;
+		      blob->m20+=xx*xx; blob->m02+=yy*yy;
+		    }
+
+		    break;
+		  }
+		}
+	      }
+	      while (!(xx==x && yy==y));
+	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	    }
+	    else if (!imageOut(x, y))
+	    {
+	      //cout << "Píxel interno: " << x << ", " << y << endl;
+	      // Internal pixel
+
+	      CvLabel l;
+	      CvBlob *blob = NULL;
+
+	      l = imageOut(x-1, y);
+
+	      if (l) // XXXXXXXXXX
+	      {
+	      imageOut(x, y) = l;
+	      blob = blobs[l];
+	      blob->area++;
+	      blob->m10+=x; blob->m01+=y;
+	      blob->m11+=x*y;
+	      blob->m20+=x*x; blob->m02+=y*y;
+	      }
 	    }
 	  }
+
+	  x++;
 	}
+	while (x<=img->width);
+
+	y++;
       }
+      while (y<=img->height);
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      unsigned int labelSize=blobs.size();
-      CvLabel *luLabels=new CvLabel[labelSize+1];
-      luLabels[0]=0;
-
-      for (CvBlobs::iterator it=blobs.begin();it!=blobs.end();++it)
-      {
-	CvBlob *blob1=(*it).second;
-	CvBlob *blob2=find(blob1);
-
-	if (blob1!=blob2)
-	{
-	  blob2->area+=blob1->area;
-	  blob2->minx=MIN(blob2->minx,blob1->minx); blob2->maxx=MAX(blob2->maxx,blob1->maxx);
-	  blob2->miny=MIN(blob2->miny,blob1->miny); blob2->maxy=MAX(blob2->maxy,blob1->maxy);
-	  blob2->m10+=blob1->m10; blob2->m01+=blob1->m01;
-	  blob2->m11+=blob1->m11;
-	  blob2->m20+=blob1->m20; blob2->m02+=blob1->m02;
-	}
-
-	luLabels[(*it).first]=blob2->label;
-      }
-
-      imgDataOut=(CvLabel *)imgOut->imageData + imgOut_offset;
-      for (int r=0;r<imgOut_height;r++,imgDataOut+=stepOut)
-	for (int c=0;c<imgOut_width;c++)
-	  imgDataOut[c]=luLabels[imgDataOut[c]];
-
-      delete [] luLabels;
-
-      // Eliminar los blobs hijos:
-      CvBlobs::iterator it=blobs.begin();
-      while (it!=blobs.end())
-      {
-	CvBlob *blob=(*it).second;
-	if (blob->_parent)
-	{
-	  delete blob;
-	  CvBlobs::iterator tmp=it;
-	  ++it;
-	  blobs.erase(tmp);
-	}
-	else
-	{
-	  cvCentroid((*it).second); // Here?
-	  ++it;
-	}
-      }
+      for (CvBlobs::iterator it=blobs.begin(); it!=blobs.end(); ++it)
+	cout << "===============" << (*it).second << endl;
 
       return numPixels;
 
