@@ -170,11 +170,6 @@ namespace cvb
       unsigned int colorCount = 0;
       for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
       {
-	if (!(*it).second) 
-	{
-	  cout << "---------------------------------------------------> " << (*it).first << endl; 
-	  continue;
-	}
 	CvLabel label = (*it).second->label;
 
 	Color color;
@@ -238,8 +233,6 @@ namespace cvb
     {
       for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
       {
-	if (!(*it).second) continue;
-
 	CvBlob *blob=(*it).second;
 
 	if (mode&CV_BLOB_RENDER_TO_LOG)
