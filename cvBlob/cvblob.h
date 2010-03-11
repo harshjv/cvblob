@@ -192,14 +192,12 @@ extern "C" {
 
   /// \brief Type of label.
   /// \see IPL_DEPTH_LABEL
-  typedef signed int CvLabel;
-  //typedef unsigned char CvLabel;
+  typedef unsigned char CvLabel;
 
   /// \def IPL_DEPTH_LABEL
   /// \brief Size of a label in bits.
   /// \see CvLabel
-//#define IPL_DEPTH_LABEL (sizeof(CvLabel)*8)
-#define IPL_DEPTH_LABEL IPL_DEPTH_32S
+#define IPL_DEPTH_LABEL (sizeof(CvLabel)*8)
   
   /// \brief Type of identification numbers.
   typedef unsigned int CvID;
@@ -250,13 +248,13 @@ extern "C" {
   /// \see CvBlob
   typedef std::pair<CvLabel,CvBlob *> CvLabelBlob;
   
-  /// \fn unsigned int cvLabel (IplImage *img, IplImage *imgOut, CvBlobs &blobs);
+  /// \fn unsigned int cvLabel (IplImage const *img, IplImage *imgOut, CvBlobs &blobs);
   /// \brief Label the connected parts of a binary image.
   /// \param img Input binary image (depth=IPL_DEPTH_8U and num. channels=1).
   /// \param imgOut Output image (depth=IPL_DEPTH_LABEL and num. channels=1).
   /// \param blobs List of blobs.
   /// \return Number of pixels that has been labeled.
-  unsigned int cvLabel (IplImage *img, IplImage *imgOut, CvBlobs &blobs);
+  unsigned int cvLabel (IplImage const *img, IplImage *imgOut, CvBlobs &blobs);
 
   //IplImage *cvFilterLabel(IplImage *imgIn, CvLabel label);
 

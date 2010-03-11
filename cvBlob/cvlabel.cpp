@@ -44,7 +44,7 @@ namespace cvb
   };
 
 
-  unsigned int cvLabel (IplImage *img, IplImage *imgOut, CvBlobs &blobs)
+  unsigned int cvLabel (IplImage const *img, IplImage *imgOut, CvBlobs &blobs)
   {
     CV_FUNCNAME("cvLabel");
     __CV_BEGIN__;
@@ -97,7 +97,7 @@ namespace cvb
 	{
 	  if (imageIn(x, y))
 	  {
-	    if ((!imageOut(x, y))&&((y==0)||(imageIn(x, y-1)==0)))
+	    if ((!imageOut(x, y))&&((y==0)||(!imageIn(x, y-1))))
 	    {
 	      cout << "Encontrado contorno: " << x << ", " << y << endl;
 	      // Label contour.
@@ -177,10 +177,8 @@ namespace cvb
 	      }
 	      while (!(xx==x && yy==y));
 	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	      label++;
 	    }
-	    else if ((y+1<=imgIn_height)&&(!imageIn(x, y+1))) // FIXME Añadir condición.
+	    /*else if ((y+1<=imgIn_height)&&(!imageIn(x, y+1))) // FIXME Añadir condición.
 	    {
 	      cout << "Encontrado contorno interno: " << x << ", " << y << endl;
 	      // Label internal contour
@@ -192,14 +190,14 @@ namespace cvb
 	      {
 		l = imageOut(x, y);
 
-		blob = blobs[l];
+		blob = blobs.find(l)->second;
 	      }
 	      else
 	      {
 		l = imageOut(x-1, y); // XXX x-1 is always inside the image?
 
 		imageOut(x, y) = l;
-		blob = blobs[l];
+		blob = blobs.find(l)->second;
 		blob->area++;
 		blob->m10+=x; blob->m01+=y;
 		blob->m11+=x*y;
@@ -278,16 +276,13 @@ namespace cvb
 
 	      l = imageOut(x-1, y);
 
-	      if (l) // XXXXXXXXXX
-	      {
 	      imageOut(x, y) = l;
-	      blob = blobs[l];
+	      blob = blobs.find(l)->second;
 	      blob->area++;
 	      blob->m10+=x; blob->m01+=y;
 	      blob->m11+=x*y;
 	      blob->m20+=x*x; blob->m02+=y*y;
-	      }
-	    }
+	    }*/
 	  }
 
 	  x++;
