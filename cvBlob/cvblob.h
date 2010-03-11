@@ -34,6 +34,7 @@
 #include <map>
 #include <list>
 #include <vector>
+#include <limits>
 
 #ifdef WIN32
 #include <cv.h>
@@ -198,6 +199,8 @@ extern "C" {
   /// \brief Size of a label in bits.
   /// \see CvLabel
 #define IPL_DEPTH_LABEL (sizeof(CvLabel)*8)
+
+#define CV_BLOB_MAX_LABEL std::numeric_limits<CvLabel>::max()
   
   /// \brief Type of identification numbers.
   typedef unsigned int CvID;

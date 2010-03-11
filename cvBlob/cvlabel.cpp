@@ -150,7 +150,7 @@ namespace cvb
 		      }
 		      else
 		      {
-			imageOut(nx, ny) = -1;
+			imageOut(nx, ny) = CV_BLOB_MAX_LABEL;
 		      }
 		    }
 		  }
@@ -239,7 +239,7 @@ namespace cvb
 		    }
 		    else
 		    {
-		      imageOut(nx, ny) = -1;
+		      imageOut(nx, ny) = CV_BLOB_MAX_LABEL;
 		    }
 		  }
 
