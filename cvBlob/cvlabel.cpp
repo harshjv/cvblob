@@ -101,6 +101,7 @@ namespace cvb
 	      label++;
 
 	      imageOut(x, y) = label;
+	      numPixels++;
 
 	      CvBlob *blob = new CvBlob;
 	      blob->label = label;
@@ -155,6 +156,7 @@ namespace cvb
 		  else
 		  {
 		    imageOut(xx, yy) = label;
+		    numPixels++;
 
 		    if (xx<blob->minx) blob->minx = xx;
 		    else if (xx>blob->maxx) blob->maxx = xx;
@@ -178,6 +180,8 @@ namespace cvb
 	      CvLabel l = imageOut(x-1, y);
 
 	      imageOut(x, y) = l;
+	      numPixels++;
+
 	      CvBlob *blob = blobs.find(l)->second;
 	      blob->area++;
 	      blob->m10+=x; blob->m01+=y;
@@ -228,6 +232,7 @@ namespace cvb
 		    if (!imageOut(xx, yy))
 		    {
 		      imageOut(xx, yy) = l;
+		      numPixels++;
 
 		      blob->area++;
 		      blob->m10+=xx; blob->m01+=yy;
@@ -247,6 +252,8 @@ namespace cvb
 	      CvLabel l = imageOut(x-1, y);
 
 	      imageOut(x, y) = l;
+	      numPixels++;
+
 	      CvBlob *blob = blobs.find(l)->second;
 	      blob->area++;
 	      blob->m10+=x; blob->m01+=y;
@@ -256,6 +263,9 @@ namespace cvb
 	  }
 	}
       }
+
+      for (CvBlobs::iterator it=blobs.begin(); it!=blobs.end(); ++it)
+	cvCentroid((*it).second);
 
       return numPixels;
 
