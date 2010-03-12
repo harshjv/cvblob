@@ -253,6 +253,7 @@ extern "C" {
   
   /// \fn unsigned int cvLabel (IplImage const *img, IplImage *imgOut, CvBlobs &blobs);
   /// \brief Label the connected parts of a binary image.
+  /// Algorithm based on paper "A linear-time component-labeling algorithm using contour tracing technique" of Fu Chang, Chun-Jen Chen and Chi-Jen Lu.
   /// \param img Input binary image (depth=IPL_DEPTH_8U and num. channels=1).
   /// \param imgOut Output image (depth=IPL_DEPTH_LABEL and num. channels=1).
   /// \param blobs List of blobs.
