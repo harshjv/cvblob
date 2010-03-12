@@ -83,17 +83,14 @@ namespace cvb
       unsigned char *imgDataIn = (unsigned char *)img->imageData + imgIn_offset;
       CvLabel *imgDataOut = (CvLabel *)imgOut->imageData + imgOut_offset;
 
-      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define imageIn(X, Y) imgDataIn[(X) + (Y)*stepIn]
 #define imageOut(X, Y) imgDataOut[(X) + (Y)*stepOut]
 
       unsigned int x;
       unsigned int y = 0;
-      do
+      for (y=0; y<imgIn_height; y++)
       {
-	x=0;
-
-	do
+	for (x=0; x<imgIn_width; x++)
 	{
 	  CV_ASSERT((x<img->width)&&(y<img->height));
 	  if (imageIn(x, y))
@@ -116,7 +113,6 @@ namespace cvb
 	      blob->centralMoments=false;
 	      blobs.insert(CvLabelBlob(label,blob));
 
-	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	      blob->contour.startingPoint = cvPoint(x, y);
 
 	      unsigned char direction=1;
@@ -135,7 +131,6 @@ namespace cvb
 		    int ny = yy+movesE[direction][i][1];
 		    if ((nx<imgIn_width)&&(nx>=0)&&(ny<imgIn_height)&&(ny>=0))
 		    {
-		      //CV_ASSERT((nx<imgOut->widthStep)&&(ny<img
 		      if (imageIn(nx, ny))
 		      {
 			found = true;
@@ -176,12 +171,10 @@ namespace cvb
 		}
 	      }
 	      while (!(xx==x && yy==y));
-	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	    }
-	    else if ((y+1<imgIn_height)&&(!imageIn(x, y+1))&&(!imageOut(x, y+1))) // FIXME Añadir condición.
+	    else if ((y+1<imgIn_height)&&(!imageIn(x, y+1))&&(!imageOut(x, y+1)))
 	    {
 	      // Label internal contour
-
 	      CvLabel l = imageOut(x-1, y);
 
 	      imageOut(x, y) = l;
@@ -191,9 +184,8 @@ namespace cvb
 	      blob->m11+=x*y;
 	      blob->m20+=x*x; blob->m02+=y*y;
 
-	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	      CvContourChainCode *contour = new CvContourChainCode;
-	      //blob->internalContours.push_back(contour);
+	      blob->internalContours.push_back(contour);
 
 	      contour->startingPoint = cvPoint(x, y);
 
@@ -248,33 +240,22 @@ namespace cvb
 		}
 	      }
 	      while (!(xx==x && yy==y));
-	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	    }
 	    else if (!imageOut(x, y))
 	    {
 	      // Internal pixel
-
-	      CvLabel l;
-	      CvBlob *blob = NULL;
-
-	      l = imageOut(x-1, y);
+	      CvLabel l = imageOut(x-1, y);
 
 	      imageOut(x, y) = l;
-	      blob = blobs.find(l)->second;
+	      CvBlob *blob = blobs.find(l)->second;
 	      blob->area++;
 	      blob->m10+=x; blob->m01+=y;
 	      blob->m11+=x*y;
 	      blob->m20+=x*x; blob->m02+=y*y;
 	    }
 	  }
-
-	  x++;
 	}
-	while (x<img->width);
-
-	y++;
       }
-      while (y<img->height);
 
       return numPixels;
 
