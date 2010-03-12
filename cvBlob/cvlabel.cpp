@@ -80,7 +80,7 @@ namespace cvb
 	imgOut_offset = imgOut->roi->xOffset + (imgOut->roi->yOffset * stepOut);
       }
 
-      char *imgDataIn = img->imageData + imgIn_offset;
+      unsigned char *imgDataIn = (unsigned char *)img->imageData + imgIn_offset;
       CvLabel *imgDataOut = (CvLabel *)imgOut->imageData + imgOut_offset;
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,11 +95,11 @@ namespace cvb
 
 	do
 	{
+	  CV_ASSERT((x<img->width)&&(y<img->height));
 	  if (imageIn(x, y))
 	  {
 	    if ((!imageOut(x, y))&&((y==0)||(!imageIn(x, y-1))))
 	    {
-	      cout << "Encontrado contorno: " << x << ", " << y << endl;
 	      // Label contour.
 	      label++;
 
@@ -115,7 +115,6 @@ namespace cvb
 	      blob->m20=x*x; blob->m02=y*y;
 	      blob->centralMoments=false;
 	      blobs.insert(CvLabelBlob(label,blob));
-	      cout << "(((((((((((((((((((((((((((((( " << label << ", " << blob << endl;
 
 	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	      blob->contour.startingPoint = cvPoint(x, y);
@@ -134,8 +133,9 @@ namespace cvb
 		  {
 		    int nx = xx+movesE[direction][i][0];
 		    int ny = yy+movesE[direction][i][1];
-		    if ((nx<=imgIn_width)&&(nx>=0)&&(ny<=imgIn_height)&&(ny>=0))
+		    if ((nx<imgIn_width)&&(nx>=0)&&(ny<imgIn_height)&&(ny>=0))
 		    {
+		      //CV_ASSERT((nx<imgOut->widthStep)&&(ny<img
 		      if (imageIn(nx, ny))
 		      {
 			found = true;
@@ -178,40 +178,26 @@ namespace cvb
 	      while (!(xx==x && yy==y));
 	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	    }
-	    /*else if ((y+1<=imgIn_height)&&(!imageIn(x, y+1))) // FIXME Añadir condición.
+	    else if ((y+1<imgIn_height)&&(!imageIn(x, y+1))&&(!imageOut(x, y+1))) // FIXME Añadir condición.
 	    {
-	      cout << "Encontrado contorno interno: " << x << ", " << y << endl;
 	      // Label internal contour
 
-	      CvLabel l;
-	      CvBlob *blob = NULL;
+	      CvLabel l = imageOut(x-1, y);
 
-	      if (imageOut(x, y))
-	      {
-		l = imageOut(x, y);
-
-		blob = blobs.find(l)->second;
-	      }
-	      else
-	      {
-		l = imageOut(x-1, y); // XXX x-1 is always inside the image?
-
-		imageOut(x, y) = l;
-		blob = blobs.find(l)->second;
-		blob->area++;
-		blob->m10+=x; blob->m01+=y;
-		blob->m11+=x*y;
-		blob->m20+=x*x; blob->m02+=y*y;
-	      }
+	      imageOut(x, y) = l;
+	      CvBlob *blob = blobs.find(l)->second;
+	      blob->area++;
+	      blob->m10+=x; blob->m01+=y;
+	      blob->m11+=x*y;
+	      blob->m20+=x*x; blob->m02+=y*y;
 
 	      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	      CvContourChainCode *contour = new CvContourChainCode;
-	      cout << "-------------------------------------------------------------------------------------------------------" << endl;
 	      //blob->internalContours.push_back(contour);
 
 	      contour->startingPoint = cvPoint(x, y);
 
-	      unsigned char direction=1;
+	      unsigned char direction=3;
 	      unsigned int xx = x;
 	      unsigned int yy = y;
 
@@ -247,10 +233,8 @@ namespace cvb
 		    direction=(direction+1)%4;
 		  else
 		  {
-		    cout << "  Coordenadas: " << xx << ", " << yy << "       Dirección: " << (unsigned int)direction << endl;
 		    if (!imageOut(xx, yy))
 		    {
-		      cout << "  Pixel interno: " << xx << ", " << yy << endl;
 		      imageOut(xx, yy) = l;
 
 		      blob->area++;
@@ -268,7 +252,6 @@ namespace cvb
 	    }
 	    else if (!imageOut(x, y))
 	    {
-	      //cout << "Píxel interno: " << x << ", " << y << endl;
 	      // Internal pixel
 
 	      CvLabel l;
@@ -282,20 +265,16 @@ namespace cvb
 	      blob->m10+=x; blob->m01+=y;
 	      blob->m11+=x*y;
 	      blob->m20+=x*x; blob->m02+=y*y;
-	    }*/
+	    }
 	  }
 
 	  x++;
 	}
-	while (x<=img->width);
+	while (x<img->width);
 
 	y++;
       }
-      while (y<=img->height);
-      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-      for (CvBlobs::iterator it=blobs.begin(); it!=blobs.end(); ++it)
-	cout << "===============" << (*it).second << endl;
+      while (y<img->height);
 
       return numPixels;
 
