@@ -92,16 +92,24 @@ namespace cvb
       {
 	for (x=0; x<imgIn_width; x++)
 	{
-	  CV_ASSERT((x<img->width)&&(y<img->height));
 	  if (imageIn(x, y))
 	  {
+	    bool labeled = imageOut(x, y);
+
 	    if ((!imageOut(x, y))&&((y==0)||(!imageIn(x, y-1))))
 	    {
+	      labeled = true;
+
 	      // Label contour.
 	      label++;
+	      CV_ASSERT(label!=CV_BLOB_MAX_LABEL);
 
 	      imageOut(x, y) = label;
 	      numPixels++;
+
+	      // XXX This is not necessary at all. I only do this for consistency.
+	      if (y>0)
+		imageOut(x, y-1) = CV_BLOB_MAX_LABEL;
 
 	      CvBlob *blob = new CvBlob;
 	      blob->label = label;
@@ -112,6 +120,7 @@ namespace cvb
 	      blob->m11=x*y;
 	      blob->m20=x*x; blob->m02=y*y;
 	      blob->centralMoments=false;
+	      blob->internalContours.clear();
 	      blobs.insert(CvLabelBlob(label,blob));
 
 	      blob->contour.startingPoint = cvPoint(x, y);
@@ -173,20 +182,38 @@ namespace cvb
 		}
 	      }
 	      while (!(xx==x && yy==y));
+
 	    }
-	    else if ((y+1<imgIn_height)&&(!imageIn(x, y+1))&&(!imageOut(x, y+1)))
+
+	    if ((y+1<imgIn_height)&&(!imageIn(x, y+1))&&(!imageOut(x, y+1)))
 	    {
+	      labeled = true;
+
 	      // Label internal contour
-	      CvLabel l = imageOut(x-1, y);
+	      CvLabel l;
+	      CvBlob *blob = NULL;
 
-	      imageOut(x, y) = l;
-	      numPixels++;
+	      if (!imageOut(x, y))
+	      {
+		l = imageOut(x-1, y);
 
-	      CvBlob *blob = blobs.find(l)->second;
-	      blob->area++;
-	      blob->m10+=x; blob->m01+=y;
-	      blob->m11+=x*y;
-	      blob->m20+=x*x; blob->m02+=y*y;
+		imageOut(x, y) = l;
+		numPixels++;
+
+		blob = blobs.find(l)->second;
+		blob->area++;
+		blob->m10+=x; blob->m01+=y;
+		blob->m11+=x*y;
+		blob->m20+=x*x; blob->m02+=y*y;
+	      }
+	      else
+	      {
+		l = imageOut(x, y);
+		blob = blobs.find(l)->second;
+	      }
+
+	      // XXX This is not necessary (I believe). I only do this for consistency.
+	      imageOut(x, y+1) = CV_BLOB_MAX_LABEL;
 
 	      CvContourChainCode *contour = new CvContourChainCode;
 	      blob->internalContours.push_back(contour);
@@ -246,7 +273,9 @@ namespace cvb
 	      }
 	      while (!(xx==x && yy==y));
 	    }
-	    else if (!imageOut(x, y))
+
+	    //else if (!imageOut(x, y))
+	    if (!labeled)
 	    {
 	      // Internal pixel
 	      CvLabel l = imageOut(x-1, y);
@@ -264,6 +293,7 @@ namespace cvb
 	}
       }
 
+      // XXX Here?
       for (CvBlobs::iterator it=blobs.begin(); it!=blobs.end(); ++it)
 	cvCentroid((*it).second);
 
