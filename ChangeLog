@@ -1,6 +1,11 @@
+Version 0.9.15 (2010/04/06)
+
+  * cvaux.cpp: bug fixed (change "abs" for "fabs"). Thanks, sircoko.
+
 Version 0.9.14 (2010/03/10)
 
   * cvlabel.cpp, cvblob.h: function "cvGetLabel".
+
   * Makefile, red_object_tracking.cpp: sample program.
 
 Version 0.9.13 (2010/01/01)
