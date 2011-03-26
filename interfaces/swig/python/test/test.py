@@ -49,6 +49,8 @@ IPL_DEPTH_LABEL = 32
 labelImg = cv.CreateImage(cv.GetSize(grey), IPL_DEPTH_LABEL, 1)
 
 #CvBlobs blobs;
+blobs = cvblob.CvBlobs()
+
 #unsigned int result = cvLabel(grey, labelImg, blobs);
 #
 #IplImage *imgOut = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 3); cvZero(imgOut);
