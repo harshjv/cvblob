@@ -501,3 +501,7 @@ This issue has been reported as a bug to the SWIG sourceforge bugtracker:
 // ---- Instantiate CvContourPolygon template -----
 %include "std_vector.i"
 %template(CvContourPolygon) std::vector<CvPoint>;
+
+// ---- Instantiate CvContoursChainCode template -----
+%include "std_list.i"
+%template(CvContoursChainCode) std::list<cvb::CvContourChainCode *>;
