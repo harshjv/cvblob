@@ -246,24 +246,18 @@ corresponding python wrapper will accept a tuple.
    delete $1;
 }
 
-// --- Input typemap: Python tuple to CvPoint2D64f, CvPoint
+// --- Input typemap: Python tuple to CvPoint2D64f
 
 %{
-
     #include <opencv/cv.h>
     #include <Python.h>
 
-    /* convert_to_CvPoint2DType: convert a PyObject to any OpenCV Point2D type (in fact
-    any object which has x and y data members)
-    */
-    template<typename CvPointType>
-    static int convert_to_CvPoint2DType(PyObject * obj, CvPointType& dst) {
+    static int convert_to_CvPoint2D64f(PyObject * obj, CvPoint2D64f& dst) {
 
         // Initialize to zero 
         (dst).x = (dst).y = 0.0;
         int retval = 1;
 
-        /* Parse the tuple. */
         if (PyArg_ParseTuple(obj, "dd", &((dst).x), &((dst).y)))
         {
             retval = 1;
@@ -277,29 +271,121 @@ corresponding python wrapper will accept a tuple.
     }
 %}
 
-/* Input typemap: convert from Python input object to C/C++ CvPoint2D64f and CvPoint objects
+/* Input typemap: convert from Python input object to a C/C++ CvPoint2D64f object
 
 NOTE:
-    - This allows us to assign python 2-tuples to CvBlob.centroid and CvContourChainCode.startingPoint
+    - This allows us to assign python 2-tuples to CvBlob.centroid 
 */
-%typemap(in) CvPoint2D64f, CvPoint 
+%typemap(in) CvPoint2D64f
 {
-    if (!convert_to_CvPoint2DType($input, ($1))) 
+    if (!convert_to_CvPoint2D64f($input, ($1))) 
     {
-        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint2D64f");
+        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint type");
     }
 }
 
-
-// --- Output typemap: CvPoint2D64f, CvPoint to Python tuple
+// --- Output typemap: CvPoint2D64f to Python tuple
 
 /* NOTE:
-    - This typemap means that CvBlob.centroid and CvContourChainCode.startingPoint  will return a python 2-tuple */ 
-%typemap(out) CvPoint2D64f, CvPoint
+    - This typemap means that CvBlob.centroid will return a python 2-tuple
+*/
+%typemap(out) CvPoint2D64f
 {
    $result =  Py_BuildValue("(dd)", $1.x, $1.y);
 }
 
+
+// --- Input typemap: Python tuple to CvPoint
+
+
+%{
+    #include <opencv/cv.h>
+    #include <Python.h>
+
+
+    // convert_to_CvPoint: convert a PyObject to a CvPoint object
+    static int convert_to_CvPoint(PyObject * obj, CvPoint& dst) {
+
+        // Initialize to zero 
+        (dst).x = (dst).y = 0;
+        int retval = 1;
+
+        /* Parse the tuple. */
+        if (PyArg_ParseTuple(obj, "ii", &((dst).x), &((dst).y)))
+        {
+            retval = 1;
+        }
+        else
+        {
+            retval =  failmsg("%%typemap: could not convert input argument to a CvPoint");
+        }
+      
+        return retval;
+    }
+
+    // convert_to_NewCvPoint: same as convert_to_CvPoint, except the destination CvPoint object is created on the heap.
+    static int convert_to_NewCvPoint(PyObject * obj, CvPoint** dst) {
+
+        (*dst) = new CvPoint;
+   
+        return convert_to_CvPoint(obj, **dst);
+    }
+
+%}
+
+
+/* Input typemap: convert from Python input object to C/C++ CvPoint objects
+
+NOTE:
+    - This allows us to assign python 2-tuples to CvContourChainCode.startingPoint
+*/
+%typemap(in) CvPoint 
+{
+    if (!convert_to_CvPoint($input, ($1))) 
+    {
+        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint type");
+    }
+}
+
+/*
+NOTE:
+    - This typemap means we can pass 2-tuples to CvContourPolygon.append() etc
+    - It also means we can pass 2-tuples  to the various "Point" functions (e.g cvDistancePointPoint)
+*/
+%typemap(in) (CvPoint const &)
+{
+    // Note that even though the destination type is a const reference, SWIG will declare the CvPoint as a pointer,
+    // and we have to instantiate it on the heap
+    if (!convert_to_NewCvPoint($input, &($1))) 
+    {
+        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint");
+    }
+}
+
+%typemap(freearg) (CvPoint const &) {
+   delete $1;
+}
+
+
+// --- Output typemap: CvPoint to Python tuple
+
+/* NOTE:
+    - This typemap means that CvContourChainCode.startingPoint  will return a python 2-tuple
+*/
+%typemap(out) CvPoint
+{
+   $result =  Py_BuildValue("(ii)", $1.x, $1.y);
+}
+
+/* NOTE:
+    - This typemap means that CvContourPolygon.front() etc. will return a python 2-tuple
+*/
+%typemap(out) (CvPoint const &)
+{
+    // Note that even though the return type is a const reference, SWIG will declare the CvPoint as a pointer
+    $result = Py_BuildValue("(ii)", $1->x, $1->y);
+
+}
 
 
 // --- Output typemap: CvScalar to Python tuple
@@ -311,7 +397,6 @@ python wrapper just return a 4-tuple.*/
 {
    $result =  Py_BuildValue("(dddd)", $1.val[0], $1.val[1], $1.val[2], $1.val[3]);
 }
-
 
 // --- Declare the cvBlob interface to be wrapped ---
 
@@ -348,8 +433,8 @@ namespace cvb
 
     struct CvContourChainCode
     {
-    CvPoint startingPoint; ///< Point where contour begin.
-    CvChainCodes chainCode; ///< Polygon description based on chain codes.
+        CvPoint startingPoint; ///< Point where contour begin.
+        CvChainCodes chainCode; ///< Polygon description based on chain codes.
     };
 
     typedef std::list<CvContourChainCode *> CvContoursChainCode; ///< List of contours (chain codes type).
