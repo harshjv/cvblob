@@ -96,19 +96,25 @@ for label, blob in blobs.iteritems():
 
 #   // Render internal contours:
 #   for (CvContoursChainCode::const_iterator jt=(*it).second->internalContours.begin(); jt!=(*it).second->internalContours.end(); ++jt)
+    for contour in blob.internalContours: 
 #       cvRenderContourChainCode((*jt), imgOut);
-# 
+        cvblob.cvRenderContourChainCode(contour, imgOut)
+
 #   //stringstream filename;
 #   //filename << "blob_" << setw(2) << setfill('0') << i++ << ".png";
 #   //cvSaveImageBlob(filename.str().c_str(), imgOut, (*it).second);
 # }
 # 
 # cvNamedWindow("test", 1);
+cv.NamedWindow("test", 1);
 # cvShowImage("test", imgOut);
+cv.ShowImage("test", imgOut)
 # //cvShowImage("grey", grey);
 # cvWaitKey(0);
+cv.WaitKey(0)
 # cvDestroyWindow("test");
-# 
+cv.DestroyWindow("test");
+
 # cvReleaseImage(&imgOut);
 # cvReleaseImage(&grey);
 # cvReleaseImage(&labelImg);
