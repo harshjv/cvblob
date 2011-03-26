@@ -20,105 +20,54 @@
 # ----------------------------------------------------------------------------------
 # NOTE - zorzalzilba  
 # This file is a python version of the original C++ test/test.cpp
-# Where possible, python code is listed along side the original line(s) of C++ code.
 # ----------------------------------------------------------------------------------
 
 # Import opencv and cvblob python extensions
 # Note: these must be findable on PYTHONPATH
 import cv
-import cvblob
+import cvblob as cvb
 
 
-# IplImage *img = cvLoadImage("test.png", 1);
 img = cv.LoadImage("../../../../test/test.png",1)
 
-#cvSetImageROI(img, cvRect(100, 100, 800, 500));
 cv.SetImageROI(img, (100, 100, 800, 500))
 
-#IplImage *grey = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 1);
 grey = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_8U,1)
-
-#cvCvtColor(img, grey, CV_BGR2GRAY);
 cv.CvtColor(img, grey, cv.CV_BGR2GRAY)
-
-#cvThreshold(grey, grey, 100, 255, CV_THRESH_BINARY);
 cv.Threshold(grey, grey, 100, 255, cv.CV_THRESH_BINARY)
 
-#IplImage *labelImg = cvCreateImage(cvGetSize(grey),IPL_DEPTH_LABEL,1);
 IPL_DEPTH_LABEL = 32
 labelImg = cv.CreateImage(cv.GetSize(grey), IPL_DEPTH_LABEL, 1)
 
-#CvBlobs blobs;
-blobs = cvblob.CvBlobs()
+blobs = cvb.CvBlobs()
+result = cvb.cvLabel(grey,labelImg,blobs)
 
-#unsigned int result = cvLabel(grey, labelImg, blobs);
-result = cvblob.cvLabel(grey,labelImg,blobs)
-
-#IplImage *imgOut = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 3);
 imgOut = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_8U,3)
 cv.Zero(imgOut);
+cvb.cvRenderBlobs(labelImg, blobs, img, imgOut);
 
-#cvRenderBlobs(labelImg, blobs, img, imgOut);
-cvblob.cvRenderBlobs(labelImg, blobs, img, imgOut);
-
-#// Render contours:
-
-# for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it) {
+# Render contours:
 for label, blob in blobs.iteritems(): 
 
-#   CvScalar meanColor = cvBlobMeanColor((*it).second, labelImg, img);
-    meanColor = cvblob.cvBlobMeanColor(blob, labelImg, img)
-
-#   cout << "Mean color: r=" << (unsigned int)meanColor.val[0] << ", g=" << (unsigned int)meanColor.val[1] << ", b=" << (unsigned int)meanColor.val[2] << endl;
+    meanColor = cvb.cvBlobMeanColor(blob, labelImg, img)
     print "Mean color: r=" + str(meanColor[0]) + ", g=" + str(meanColor[1]) + ", b=" + str(meanColor[2])
 
-#   CvContourPolygon *polygon = cvConvertChainCodesToPolygon(&(*it).second->contour);
-    polygon = cvblob.cvConvertChainCodesToPolygon(blob.contour)
+    polygon = cvb.cvConvertChainCodesToPolygon(blob.contour)
 
-#   CvContourPolygon *sPolygon = cvSimplifyPolygon(polygon, 10.);
-    sPolygon = cvblob.cvSimplifyPolygon(polygon, 10.)
-
-#   CvContourPolygon *cPolygon = cvPolygonContourConvexHull(sPolygon);
-    cPolygon = cvblob.cvPolygonContourConvexHull(sPolygon)
+    sPolygon = cvb.cvSimplifyPolygon(polygon, 10.)
+    cPolygon = cvb.cvPolygonContourConvexHull(sPolygon)
      
-#   cvRenderContourChainCode(&(*it).second->contour, imgOut);
-    cvblob.cvRenderContourChainCode(blob.contour, imgOut)
+    cvb.cvRenderContourChainCode(blob.contour, imgOut)
+    cvb.cvRenderContourPolygon(sPolygon, imgOut,cv.CV_RGB(0, 0, 255))
+    cvb.cvRenderContourPolygon(cPolygon, imgOut,cv.CV_RGB(0, 255, 0))
 
-#   cvRenderContourPolygon(sPolygon, imgOut, CV_RGB(0, 0, 255));
-    cvblob.cvRenderContourPolygon(sPolygon, imgOut,cv.CV_RGB(0, 0, 255))
-
-#   cvRenderContourPolygon(cPolygon, imgOut, CV_RGB(0, 255, 0));
-    cvblob.cvRenderContourPolygon(cPolygon, imgOut,cv.CV_RGB(0, 255, 0))
-# 
-#   delete cPolygon;
-#   delete sPolygon;
-#   delete polygon;
-
-#   // Render internal contours:
-#   for (CvContoursChainCode::const_iterator jt=(*it).second->internalContours.begin(); jt!=(*it).second->internalContours.end(); ++jt)
+    # Render internal contours:
     for contour in blob.internalContours: 
-#       cvRenderContourChainCode((*jt), imgOut);
-        cvblob.cvRenderContourChainCode(contour, imgOut)
+        cvb.cvRenderContourChainCode(contour, imgOut)
 
-#   //stringstream filename;
-#   //filename << "blob_" << setw(2) << setfill('0') << i++ << ".png";
-#   //cvSaveImageBlob(filename.str().c_str(), imgOut, (*it).second);
-# }
-# 
-# cvNamedWindow("test", 1);
 cv.NamedWindow("test", 1);
-# cvShowImage("test", imgOut);
 cv.ShowImage("test", imgOut)
-# //cvShowImage("grey", grey);
-# cvWaitKey(0);
+# cv.ShowImage("grey", grey);
 cv.WaitKey(0)
-# cvDestroyWindow("test");
 cv.DestroyWindow("test");
 
-# cvReleaseImage(&imgOut);
-# cvReleaseImage(&grey);
-# cvReleaseImage(&labelImg);
-# cvReleaseImage(&img);
-# 
-# cvReleaseBlobs(blobs);
-# 
