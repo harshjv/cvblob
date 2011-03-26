@@ -14,7 +14,7 @@
 
 // --- Declare the cvBlob interface to be wrapped ---
 
-// Confess which functions allocate memory on the heap
+// Tell SWIG which functions allocate memory on the heap
 %newobject cvPolygonContourConvexHull;
 %newobject cvConvertChainCodesToPolygon;
 %newobject cvSimplifyPolygon;
@@ -92,11 +92,13 @@ namespace cvb
     {
         CvLabel label; ///< Label assigned to the blob.
 
-        union
-        {
-            unsigned int area; ///< Area (moment 00).
-            unsigned int m00; ///< Moment 00 (area).
-        };
+        /*  Note:
+                - SWIG does not support nested unions
+                - I've therefore simplified things by ignoring 
+                  the union and "m00" member declared in the original C
+                  interface, and keeping the "area" member.
+        */
+        unsigned int area; ///< Area (moment 00).
 
         unsigned int minx; ///< X min.
         unsigned int maxx; ///< X max.
