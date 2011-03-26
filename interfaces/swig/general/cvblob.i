@@ -6,40 +6,6 @@
 %}
  
 
-// ---- Instantiate CvBlobs template -----
-
-%include "std_map.i"
-%template(CvBlobs) std::map<cvb::CvLabel, cvb::CvBlob* >;
-
-/*
-The following is a workaround for an apparent bug in how SWIG instantiates "%template() std::map<>" when using a pointer
-as the map value.
-
-Without this workaround, gcc will complain with the following:
- 
-      error: ‘type_name’ is not a member of ‘swig::traits<cvb::CvBlob>’
-
-It appears that SWIG is looking for a swig::traits<cvb::CvBlob> definition, whereas it should be looking for
-swig::traits<cvb::CvBlob *> (which SWIG does actually define).
-
-The easiest workaround is to just provide the template specialization that the compiler is looking for. I dont think this
-will cause any side effects, because from what i can tell, swig::traits<>::type_name is only used as a diagnostic message
-when generating a SWIG_Error.
-
-This issue has been reported as a bug to the SWIG sourceforge bugtracker:
-- "std::map with class* key not compiling - ID: 1550362"
-- http://sourceforge.net/tracker/index.php?func=detail&aid=1550362&group_id=1645&atid=101645
-- Status of bug is "open" as of 05/02/2011.
-
-*/
-%{
-    namespace swig {
-        template <>  struct traits<cvb::CvBlob > {
-            typedef pointer_category category;
-            static const char* type_name() { return"cvb::CvBlob"; }
-        };
-    }
-%}
 
 
 
@@ -388,4 +354,45 @@ namespace cvb
 
 }//namespace cvb
 
+
+
+
+// ---- Instantiate CvBlobs template -----
+
+/* 
+Note the following %template must be declared after CvLabel is added to the SWIG interface, otherwise
+cryptic memory leaks will result when using CvBlobs.iteritems(), keyitems(), or key_iterator()
+*/
+%include "std_map.i"
+%template(CvBlobs) std::map<cvb::CvLabel, cvb::CvBlob* >;
+
+/*
+The following is a workaround for an apparent bug in how SWIG instantiates "%template() std::map<>" when using a pointer
+as the map value.
+
+Without this workaround, gcc will complain with the following:
+ 
+      error: ‘type_name’ is not a member of ‘swig::traits<cvb::CvBlob>’
+
+It appears that SWIG is looking for a swig::traits<cvb::CvBlob> definition, whereas it should be looking for
+swig::traits<cvb::CvBlob *> (which SWIG does actually define).
+
+The easiest workaround is to just provide the template specialization that the compiler is looking for. I dont think this
+will cause any side effects, because from what i can tell, swig::traits<>::type_name is only used as a diagnostic message
+when generating a SWIG_Error.
+
+This issue has been reported as a bug to the SWIG sourceforge bugtracker:
+- "std::map with class* key not compiling - ID: 1550362"
+- http://sourceforge.net/tracker/index.php?func=detail&aid=1550362&group_id=1645&atid=101645
+- Status of bug is "open" as of 05/02/2011.
+
+*/
+%{
+    namespace swig {
+        template <>  struct traits<cvb::CvBlob > {
+            typedef pointer_category category;
+            static const char* type_name() { return"cvb::CvBlob"; }
+        };
+    }
+%}
 
