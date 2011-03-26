@@ -1,3 +1,6 @@
+// direct SWIG to generate python docstrings
+%feature("autodoc", 1);
+
 %module cvblob
 %{
 #include "cvblob.h"
