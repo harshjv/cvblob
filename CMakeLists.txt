@@ -89,10 +89,6 @@ set(version ${CVBLOB_VERSION})
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cvblob.pc.cmake.in" "${CMAKE_BINARY_DIR}/cvblob.pc" @ONLY IMMEDIATE)
 
-# Save libs and executables in the same place
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE PATH "Output directory for libraries" )
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory for applications" )
-
 # --------------------------------------------------------------------------------------------
 #   Installation for CMake Module:  cvBlobConfig.cmake
 #  Part 1/3: ${BIN_DIR}/cvBlobConfig.cmake              -> For use *without* "make install"
@@ -110,7 +106,7 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE PATH "Output directory 
 
 # Set CMAKE_INCLUDE_DIRS_CONFIGCMAKE to the list of include directories:
 set(CMAKE_INCLUDE_DIRS_CONFIGCMAKE "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-set(CMAKE_LIB_DIRS_CONFIGCMAKE "${LIBRARY_OUTPUT_PATH}")
+set(CMAKE_LIB_DIRS_CONFIGCMAKE "${CMAKE_BINARY_DIR}/lib")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cvBlobConfig.cmake.in" "${CMAKE_BINARY_DIR}/cvBlobConfig.cmake" IMMEDIATE @ONLY)
 
