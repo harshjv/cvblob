@@ -151,6 +151,102 @@ the function (and the necessary helper functions it uses).
 }
 
 
+// --- Input typemap: Python tuple to CvScalar
+
+%{
+
+    #include <opencv/cv.h>
+    #include <Python.h>
+
+    /* is_tuple(): return non-zero int if the supplied PyObject* is a tuple */
+    static int is_tuple(PyObject *o)
+    {
+        // See PyTypeObject, defined in object.h of Python include directory
+        return (strcmp(o->ob_type->tp_name,"tuple") == 0);
+    }
+
+    /* convert_to_CvScalar: convert a PyObject to a CvScalar*
+
+       NOTE:
+       - CvScalar is a C array of doubles, of size 4
+       - To be flexible, this function converts any tuple of size 1 through 4. If tuple size < 4, then all other entries in 
+         the destination CvScalar are initialized to zero
+       - upon completion, the (**dst) argument will point to a new CvScalar that has been created on the heap. This 
+         requires us to also declare a %typemap(freearg) for CvScalar, see below.
+    */
+    static int convert_to_CvScalar(PyObject * obj, CvScalar** dst) {
+
+        /* NOTE: we have no option but to create a new CvScalar on the heap here.
+           This obliges us to also write a %typemap(freearg) for CvScalar */ 
+        (*dst) = new CvScalar;
+    
+        // Initialize all CvScalar elements to zero 
+        (*dst)->val[0] = (*dst)->val[1] = (*dst)->val[2] = (*dst)->val[3] = 0.0;
+        int retval = 1;
+
+        /* Parse the tuple. 
+            
+           Note the meaning of "d|ddd":
+            - convert the parsed tuple to C doubles
+            - parse tuples of at least size 1, and optionally upto size 4
+        */
+        if (PyArg_ParseTuple(obj, "d|ddd", &((*dst)->val[0]), &((*dst)->val[1]), &((*dst)->val[2]),&((*dst)->val[3])))
+        {
+            retval = 1;
+        }
+        else
+        {
+            retval =  failmsg("%%typemap: could not convert input argument to a CvScalar");
+        }
+        /*std::cout << "convert_to_CvScalar: " << (*dst)->val[0]  << " "
+                    <<  (*dst)->val[1] << " " <<  (*dst)->val[2] << " " <<  (*dst)->val[3] << std::endl;*/
+
+        return retval;
+    }
+%}
+
+
+/* Input typemap: convert from Python input object to C/C++ CvScalar
+
+NOTE: Python OpenCV treats CvScalar objects has 4-tuples, and this typemap lets us do the same thing. 
+I.e when a function (e.g cvb::cvRenderContourPolygon) is expecting a CvScalar object in C++, the
+corresponding python wrapper will accept a tuple.
+*/
+%typemap(in) (CvScalar&) 
+{
+    /* From reading the SWIG doco, i would have thought $1 would be of type (CvScalar&), as 
+       declared by the typemap signature. However the SWIG generated code requires that i
+       treat $1 here as being of type (CvScalar*) */
+    if (!convert_to_CvScalar($input, &($1))) 
+    {
+        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvScalar");
+    }
+}
+
+/* Typecheck typemap: check whether the Python input object is a CvScalar or not
+
+    Note:
+    - This is required when defining a typemap for types that are used in overloaded functions, or functions
+    which use default arguments (which are treated by SWIG as overloaded functions).
+    - Without this you will experience slightly cryptic runtime errors such as
+    "NotImplementedError: Wrong number or type of arguments for overloaded function 'cvRenderContourPolygon'."
+*/
+%typemap(typecheck) (CvScalar&)  {
+   $1 = is_tuple($input) ? 1 : 0;
+}
+
+/* Freearg typemap for CvScalar
+
+   NOTE: 
+    - this typemape is required because the input typemap (above) creates the converted CvScalar on the heap. Without
+      this the relevant SWIG generated wrapper functions would have a memory leak.
+    - SWIG inserts this code at the end of relevant wrapper functions.
+*/
+%typemap(freearg) (CvScalar&) {
+   delete $1;
+}
+
+
 // --- Output typemap: CvScalar to Python tuple
 
 /* Python OpenCV treats CvScalar objects has 4-tuples, so for consistency lets do the same thing

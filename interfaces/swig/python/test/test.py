@@ -79,20 +79,21 @@ for label, blob in blobs.iteritems():
     sPolygon = cvblob.cvSimplifyPolygon(polygon, 10.)
 
 #   CvContourPolygon *cPolygon = cvPolygonContourConvexHull(sPolygon);
-    cPolygon = cvblob.cvPolygonContourConvexHull(sPolygon);
+    cPolygon = cvblob.cvPolygonContourConvexHull(sPolygon)
      
 #   cvRenderContourChainCode(&(*it).second->contour, imgOut);
-    cvblob.cvRenderContourChainCode(blob.contour, imgOut);
+    cvblob.cvRenderContourChainCode(blob.contour, imgOut)
 
 #   cvRenderContourPolygon(sPolygon, imgOut, CV_RGB(0, 0, 255));
-#   --> cvblob.cvRenderContourPolygon(sPolygon, imgOut, cv.CV_RGB(0, 0, 255));
+    cvblob.cvRenderContourPolygon(sPolygon, imgOut,cv.CV_RGB(0, 0, 255))
 
 #   cvRenderContourPolygon(cPolygon, imgOut, CV_RGB(0, 255, 0));
+    cvblob.cvRenderContourPolygon(cPolygon, imgOut,cv.CV_RGB(0, 255, 0))
 # 
 #   delete cPolygon;
 #   delete sPolygon;
 #   delete polygon;
-# 
+
 #   // Render internal contours:
 #   for (CvContoursChainCode::const_iterator jt=(*it).second->internalContours.begin(); jt!=(*it).second->internalContours.end(); ++jt)
 #       cvRenderContourChainCode((*jt), imgOut);
