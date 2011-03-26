@@ -4,7 +4,7 @@ cvblob_obj:
 	g++ -c -arch i386 -arch x86_64 -I../../../opencv-2.1.0/include/opencv ../cvBlob/cvaux.cpp ../cvBlob/cvblob.cpp ../cvBlob/cvcolor.cpp ../cvBlob/cvcontour.cpp ../cvBlob/cvlabel.cpp ../cvBlob/cvtrack.cpp
 
 swig:
-	swig -Wall -I../cvBlob -c++ -o ./cvblob_wrap.cxx -python ../interfaces/swig/general/cvblob.i
+	swig -Wall -I../cvBlob -c++ -o ./cvblob_wrap.cxx -python ../interfaces/swig/python/cvblob.i
 
 swig_obj:
 	g++ -c -arch i386 -arch x86_64 -I../../../opencv-2.1.0/include -I../../../opencv-2.1.0/include/opencv -I../cvBlob -I /Library/Frameworks/Python.framework/Versions/2.7/include/python2.7/ cvblob_wrap.cxx
