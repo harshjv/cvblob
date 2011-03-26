@@ -43,7 +43,7 @@ This issue has been reported as a bug to the SWIG sourceforge bugtracker:
 
 
 
-// ---- Typemap: PyObject* to IPLImage* conversion
+// ---- Input typemap: PyObject* to IPLImage* conversion
 
 /*
 For the cvblob Python extension to be useable, we must be able to pass images returned by the
@@ -163,13 +163,25 @@ the function (and the necessary helper functions it uses).
     - $input corresonds to the input Python object that is to be converted (i.e. PyObject*)
     - $1 refers to the corresponding C/C++ variable, i.e the recipient of the conversion (i.e. IplImage* )
 */
-%typemap(in) IplImage *{
-
+%typemap(in) IplImage *
+{
     if (!convert_to_IplImage($input, &($1), "")) 
     {
         SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to an IplImage");
     }
 }
+
+// --- Output typemap: CvScalar to Python tuple
+
+/* Python OpenCV treats CvScalar objects has 4-tuples, so for consistency lets do the same thing
+here: when a function (e.g cvb::cvBlobMeanColor) returns a CvScalar object in C++, lets have the
+python wrapper just return a 4-tuple.*/
+%typemap(out) CvScalar 
+{
+   $result =  Py_BuildValue("(ffff)", $1.val[0], $1.val[1], $1.val[2], $1.val[3]);
+}
+
+
 
 // --- Declare the cvBlob interface to be wrapped ---
 

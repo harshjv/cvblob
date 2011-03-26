@@ -54,40 +54,51 @@ blobs = cvblob.CvBlobs()
 #unsigned int result = cvLabel(grey, labelImg, blobs);
 result = cvblob.cvLabel(grey,labelImg,blobs)
 
+#IplImage *imgOut = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 3);
+imgOut = cv.CreateImage(cv.GetSize(img), cv.IPL_DEPTH_8U,3)
+cv.Zero(imgOut);
 
-#IplImage *imgOut = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 3); cvZero(imgOut);
 #cvRenderBlobs(labelImg, blobs, img, imgOut);
+cvblob.cvRenderBlobs(labelImg, blobs, img, imgOut);
+
+
 #
 #//unsigned int i = 0;
 #
 #// Render contours:
-# for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it)
-# {
-# //cvRenderBlob(labelImg, (*it).second, img, imgOut);
+# for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it) {
+
+for label, blob in blobs.iteritems(): 
+
+
+#    //cvRenderBlob(labelImg, (*it).second, img, imgOut);
 # 
-# CvScalar meanColor = cvBlobMeanColor((*it).second, labelImg, img);
-# cout << "Mean color: r=" << (unsigned int)meanColor.val[0] << ", g=" << (unsigned int)meanColor.val[1] << ", b=" << (unsigned int)meanColor.val[2] << endl;
+#   CvScalar meanColor = cvBlobMeanColor((*it).second, labelImg, img);
+    meanColor = cvblob.cvBlobMeanColor(blob, labelImg, img)
+
+#   cout << "Mean color: r=" << (unsigned int)meanColor.val[0] << ", g=" << (unsigned int)meanColor.val[1] << ", b=" << (unsigned int)meanColor.val[2] << endl;
+    print "Mean color: r=" + str(meanColor[0]) + ", g=" + str(meanColor[1]) + ", b=" + str(meanColor[2])
+
+#   CvContourPolygon *polygon = cvConvertChainCodesToPolygon(&(*it).second->contour);
 # 
-# CvContourPolygon *polygon = cvConvertChainCodesToPolygon(&(*it).second->contour);
+#   CvContourPolygon *sPolygon = cvSimplifyPolygon(polygon, 10.);
+#   CvContourPolygon *cPolygon = cvPolygonContourConvexHull(sPolygon);
 # 
-# CvContourPolygon *sPolygon = cvSimplifyPolygon(polygon, 10.);
-# CvContourPolygon *cPolygon = cvPolygonContourConvexHull(sPolygon);
+#   cvRenderContourChainCode(&(*it).second->contour, imgOut);
+#   cvRenderContourPolygon(sPolygon, imgOut, CV_RGB(0, 0, 255));
+#   cvRenderContourPolygon(cPolygon, imgOut, CV_RGB(0, 255, 0));
 # 
-# cvRenderContourChainCode(&(*it).second->contour, imgOut);
-# cvRenderContourPolygon(sPolygon, imgOut, CV_RGB(0, 0, 255));
-# cvRenderContourPolygon(cPolygon, imgOut, CV_RGB(0, 255, 0));
+#   delete cPolygon;
+#   delete sPolygon;
+#   delete polygon;
 # 
-# delete cPolygon;
-# delete sPolygon;
-# delete polygon;
+#   // Render internal contours:
+#   for (CvContoursChainCode::const_iterator jt=(*it).second->internalContours.begin(); jt!=(*it).second->internalContours.end(); ++jt)
+#       cvRenderContourChainCode((*jt), imgOut);
 # 
-# // Render internal contours:
-# for (CvContoursChainCode::const_iterator jt=(*it).second->internalContours.begin(); jt!=(*it).second->internalContours.end(); ++jt)
-#     cvRenderContourChainCode((*jt), imgOut);
-# 
-# //stringstream filename;
-# //filename << "blob_" << setw(2) << setfill('0') << i++ << ".png";
-# //cvSaveImageBlob(filename.str().c_str(), imgOut, (*it).second);
+#   //stringstream filename;
+#   //filename << "blob_" << setw(2) << setfill('0') << i++ << ".png";
+#   //cvSaveImageBlob(filename.str().c_str(), imgOut, (*it).second);
 # }
 # 
 # cvNamedWindow("test", 1);
