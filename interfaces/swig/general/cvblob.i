@@ -238,13 +238,66 @@ corresponding python wrapper will accept a tuple.
 /* Freearg typemap for CvScalar
 
    NOTE: 
-    - this typemape is required because the input typemap (above) creates the converted CvScalar on the heap. Without
+    - this typemap is required because the input typemap (above) creates the converted CvScalar on the heap. Without
       this the relevant SWIG generated wrapper functions would have a memory leak.
     - SWIG inserts this code at the end of relevant wrapper functions.
 */
 %typemap(freearg) (CvScalar&) {
    delete $1;
 }
+
+// --- Input typemap: Python tuple to CvPoint2D64f
+
+%{
+
+    #include <opencv/cv.h>
+    #include <Python.h>
+
+    /* convert_to_CvPoint2D64f: convert a PyObject to a CvPoint2D64f
+    */
+    static int convert_to_CvPoint2D64f(PyObject * obj, CvPoint2D64f& dst) {
+
+        // Initialize to zero 
+        (dst).x = (dst).y = 0.0;
+        int retval = 1;
+
+        /* Parse the tuple. */
+        if (PyArg_ParseTuple(obj, "dd", &((dst).x), &((dst).y)))
+        {
+            retval = 1;
+        }
+        else
+        {
+            retval =  failmsg("%%typemap: could not convert input argument to a CvPoint2D64f");
+        }
+      
+        return retval;
+    }
+%}
+
+/* Input typemap: convert from Python input object to C/C++ CvPoint2D64f
+
+NOTE:
+    - This allows us to assign python 2-tuples to CvBlob.centroid.
+*/
+%typemap(in) (CvPoint2D64f) 
+{
+    if (!convert_to_CvPoint2D64f($input, ($1))) 
+    {
+        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint2D64f");
+    }
+}
+
+
+// --- Output typemap: CvPoint2D64f to Python tuple
+
+/* NOTE:
+    - This typemap means that CvBlob.centroid will return a python 2-tuple */ 
+%typemap(out) CvPoint2D64f
+{
+   $result =  Py_BuildValue("(dd)", $1.x, $1.y);
+}
+
 
 
 // --- Output typemap: CvScalar to Python tuple
@@ -271,16 +324,6 @@ python wrapper just return a 4-tuple.*/
       possible using a proxy struct/class? 
 */
 
-/* struct CvPoint2D64f
-
-   Needed in order to dereference CvBlob::centroid
-*/
-typedef struct CvPoint2D64f
-{
-    double x;
-    double y;
-}
-CvPoint2D64f;
 /* struct CvPoint
 
    Needed in order to dereference CvBlob::contour::startingPoint
@@ -291,7 +334,6 @@ typedef struct CvPoint
     int y;
 }
 CvPoint;
-
 
 // --- Declare the cvBlob interface to be wrapped ---
 
