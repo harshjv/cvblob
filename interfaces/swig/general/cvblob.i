@@ -246,16 +246,18 @@ corresponding python wrapper will accept a tuple.
    delete $1;
 }
 
-// --- Input typemap: Python tuple to CvPoint2D64f
+// --- Input typemap: Python tuple to CvPoint2D64f, CvPoint
 
 %{
 
     #include <opencv/cv.h>
     #include <Python.h>
 
-    /* convert_to_CvPoint2D64f: convert a PyObject to a CvPoint2D64f
+    /* convert_to_CvPoint2DType: convert a PyObject to any OpenCV Point2D type (in fact
+    any object which has x and y data members)
     */
-    static int convert_to_CvPoint2D64f(PyObject * obj, CvPoint2D64f& dst) {
+    template<typename CvPointType>
+    static int convert_to_CvPoint2DType(PyObject * obj, CvPointType& dst) {
 
         // Initialize to zero 
         (dst).x = (dst).y = 0.0;
@@ -275,25 +277,25 @@ corresponding python wrapper will accept a tuple.
     }
 %}
 
-/* Input typemap: convert from Python input object to C/C++ CvPoint2D64f
+/* Input typemap: convert from Python input object to C/C++ CvPoint2D64f and CvPoint objects
 
 NOTE:
-    - This allows us to assign python 2-tuples to CvBlob.centroid.
+    - This allows us to assign python 2-tuples to CvBlob.centroid and CvContourChainCode.startingPoint
 */
-%typemap(in) (CvPoint2D64f) 
+%typemap(in) CvPoint2D64f, CvPoint 
 {
-    if (!convert_to_CvPoint2D64f($input, ($1))) 
+    if (!convert_to_CvPoint2DType($input, ($1))) 
     {
         SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint2D64f");
     }
 }
 
 
-// --- Output typemap: CvPoint2D64f to Python tuple
+// --- Output typemap: CvPoint2D64f, CvPoint to Python tuple
 
 /* NOTE:
-    - This typemap means that CvBlob.centroid will return a python 2-tuple */ 
-%typemap(out) CvPoint2D64f
+    - This typemap means that CvBlob.centroid and CvContourChainCode.startingPoint  will return a python 2-tuple */ 
+%typemap(out) CvPoint2D64f, CvPoint
 {
    $result =  Py_BuildValue("(dd)", $1.x, $1.y);
 }
@@ -310,30 +312,6 @@ python wrapper just return a 4-tuple.*/
    $result =  Py_BuildValue("(dddd)", $1.val[0], $1.val[1], $1.val[2], $1.val[3]);
 }
 
-
-// --- (Re)Declare OpenCV types
-
-/* The following types are copied from <opencv/cxtypes.h>
-
-   NOTE:
-    - These are needed in order to meaningfully dereference the wrappers of certain CvBlob types
-      (e.g CvBlob.centroid)
-    - Without these, dereferencing will return an unusable SwigPyObject
-    - This solution is inelegant and unsatisfying: is there another way round this?
-    - E.g: it would be much more pythonesque to have CvBlob.centroid return a 2-tuple, instead of a CvPoint2D64f. Is this
-      possible using a proxy struct/class? 
-*/
-
-/* struct CvPoint
-
-   Needed in order to dereference CvBlob::contour::startingPoint
-*/
-typedef struct CvPoint
-{
-    int x;
-    int y;
-}
-CvPoint;
 
 // --- Declare the cvBlob interface to be wrapped ---
 
