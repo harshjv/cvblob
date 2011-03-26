@@ -61,18 +61,11 @@ cv.Zero(imgOut);
 #cvRenderBlobs(labelImg, blobs, img, imgOut);
 cvblob.cvRenderBlobs(labelImg, blobs, img, imgOut);
 
-
-#
-#//unsigned int i = 0;
-#
 #// Render contours:
-# for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it) {
 
+# for (CvBlobs::const_iterator it=blobs.begin(); it!=blobs.end(); ++it) {
 for label, blob in blobs.iteritems(): 
 
-
-#    //cvRenderBlob(labelImg, (*it).second, img, imgOut);
-# 
 #   CvScalar meanColor = cvBlobMeanColor((*it).second, labelImg, img);
     meanColor = cvblob.cvBlobMeanColor(blob, labelImg, img)
 
@@ -80,12 +73,20 @@ for label, blob in blobs.iteritems():
     print "Mean color: r=" + str(meanColor[0]) + ", g=" + str(meanColor[1]) + ", b=" + str(meanColor[2])
 
 #   CvContourPolygon *polygon = cvConvertChainCodesToPolygon(&(*it).second->contour);
-# 
+    polygon = cvblob.cvConvertChainCodesToPolygon(blob.contour)
+
 #   CvContourPolygon *sPolygon = cvSimplifyPolygon(polygon, 10.);
+    sPolygon = cvblob.cvSimplifyPolygon(polygon, 10.)
+
 #   CvContourPolygon *cPolygon = cvPolygonContourConvexHull(sPolygon);
-# 
+    cPolygon = cvblob.cvPolygonContourConvexHull(sPolygon);
+     
 #   cvRenderContourChainCode(&(*it).second->contour, imgOut);
+    cvblob.cvRenderContourChainCode(blob.contour, imgOut);
+
 #   cvRenderContourPolygon(sPolygon, imgOut, CV_RGB(0, 0, 255));
+#   --> cvblob.cvRenderContourPolygon(sPolygon, imgOut, cv.CV_RGB(0, 0, 255));
+
 #   cvRenderContourPolygon(cPolygon, imgOut, CV_RGB(0, 255, 0));
 # 
 #   delete cPolygon;

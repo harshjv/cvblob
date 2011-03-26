@@ -396,3 +396,6 @@ This issue has been reported as a bug to the SWIG sourceforge bugtracker:
     }
 %}
 
+// ---- Instantiate CvContourPolygon template -----
+%include "std_vector.i"
+%template(CvContourPolygon) std::vector<CvPoint>;
