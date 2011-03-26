@@ -7,7 +7,7 @@
 %module cvblob
 
 %{
-#include "cvblob.h"
+    #include "cvblob.h"
 %}
 
 // Have SWIG generate python docstrings

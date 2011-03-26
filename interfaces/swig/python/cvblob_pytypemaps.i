@@ -273,7 +273,7 @@ NOTE:
 {
     if (!convert_to_CvPoint2D64f($input, ($1))) 
     {
-        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint type");
+        SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to a CvPoint2D64f");
     }
 }
 
