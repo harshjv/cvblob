@@ -337,6 +337,10 @@ CvPoint;
 
 // --- Declare the cvBlob interface to be wrapped ---
 
+/* Confess which functions allocate memory on the heap*/
+%newobject cvPolygonContourConvexHull;
+%newobject cvConvertChainCodesToPolygon;
+%newobject cvSimplifyPolygon;
 
 namespace cvb
 {
@@ -376,8 +380,7 @@ namespace cvb
 
     void cvRenderContourChainCode(CvContourChainCode const *contour, IplImage const *img, CvScalar const &color=CV_RGB(255, 255, 255));
 
-    /* cvConvertChainCodesToPolygon return object is created on the heap, so we must tell SWIG, who otherwise won't know to delete this*/
-    %newobject cvConvertChainCodesToPolygon;
+    /* Returned object is allocated on the heap */
     CvContourPolygon *cvConvertChainCodesToPolygon(CvContourChainCode const *cc);
 
     void cvRenderContourPolygon(CvContourPolygon const *contour, IplImage *img, CvScalar const &color=CV_RGB(255, 255, 255));
@@ -390,12 +393,10 @@ namespace cvb
 
     double cvContourPolygonCircularity(const CvContourPolygon *p);
 
-    /* cvSimplifyPolygon return object is created on the heap, so we must tell SWIG, who otherwise won't know to delete this*/
-    %newobject cvSimplifyPolygon;
+    /* Returned object is allocated on the heap */
     CvContourPolygon *cvSimplifyPolygon(CvContourPolygon const *p, double const delta=1.);
 
-    /* cvPolygonContourConvexHull return object is created on the heap, so we must tell SWIG, who otherwise won't know to delete this*/
-    %newobject cvPolygonContourConvexHull;
+    /* Returned object is allocated on the heap */
     CvContourPolygon *cvPolygonContourConvexHull(CvContourPolygon const *p);
 
     void cvWriteContourPolygonCSV(const CvContourPolygon& p, const std::string& filename);
