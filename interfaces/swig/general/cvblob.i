@@ -10,6 +10,7 @@
 
 %include "std_map.i"
 %template(CvBlobs) std::map<cvb::CvLabel, cvb::CvBlob* >;
+
 /*
 The following is a workaround for an apparent bug in how SWIG instantiates "%template() std::map<>" when using a pointer
 as the map value.
@@ -170,6 +171,19 @@ the function (and the necessary helper functions it uses).
         SWIG_exception( SWIG_TypeError, "%%typemap: could not convert input argument to an IplImage");
     }
 }
+
+/* Typecheck typemap: check whether the Python input object is an IplImage* or not
+
+    Note:
+    - This is required when defining a typemap for types that are used in overloaded functions, or functions
+    which use default arguments (which are treated by SWIG as overloaded functions).
+    - Without this you will experience slightly cryptic runtime errors such as
+    "NotImplementedError: Wrong number or type of arguments for overloaded function 'cvRenderBlobs'."
+*/
+%typemap(typecheck) IplImage * {
+   $1 = is_iplimage($input) ? 1 : 0;
+}
+
 
 // --- Output typemap: CvScalar to Python tuple
 
