@@ -1,5 +1,3 @@
-%ignore operator<<;
- 
 %module cvblob
 %{
 #include "cvblob.h"
