@@ -307,7 +307,7 @@ here: when a function (e.g cvb::cvBlobMeanColor) returns a CvScalar object in C+
 python wrapper just return a 4-tuple.*/
 %typemap(out) CvScalar 
 {
-   $result =  Py_BuildValue("(ffff)", $1.val[0], $1.val[1], $1.val[2], $1.val[3]);
+   $result =  Py_BuildValue("(dddd)", $1.val[0], $1.val[1], $1.val[2], $1.val[3]);
 }
 
 
