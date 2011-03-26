@@ -258,6 +258,40 @@ python wrapper just return a 4-tuple.*/
 }
 
 
+// --- (Re)Declare OpenCV types
+
+/* The following types are copied from <opencv/cxtypes.h>
+
+   NOTE:
+    - These are needed in order to meaningfully dereference the wrappers of certain CvBlob types
+      (e.g CvBlob.centroid)
+    - Without these, dereferencing will return an unusable SwigPyObject
+    - This solution is inelegant and unsatisfying: is there another way round this?
+    - E.g: it would be much more pythonesque to have CvBlob.centroid return a 2-tuple, instead of a CvPoint2D64f. Is this
+      possible using a proxy struct/class? 
+*/
+
+/* struct CvPoint2D64f
+
+   Needed in order to dereference CvBlob::centroid
+*/
+typedef struct CvPoint2D64f
+{
+    double x;
+    double y;
+}
+CvPoint2D64f;
+/* struct CvPoint
+
+   Needed in order to dereference CvBlob::contour::startingPoint
+*/
+typedef struct CvPoint
+{
+    int x;
+    int y;
+}
+CvPoint;
+
 
 // --- Declare the cvBlob interface to be wrapped ---
 
