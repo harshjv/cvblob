@@ -30,6 +30,48 @@ set(CVBLOB_VERSION_MINOR 10)
 set(CVBLOB_VERSION_PATCH 4)
 set(CVBLOB_VERSION "${CVBLOB_VERSION_MAJOR}.${CVBLOB_VERSION_MINOR}.${CVBLOB_VERSION_PATCH}")
 
+
+# ----------------------------------------------------------------------------
+#       CHECK FOR SWIG and PYTHON
+#       (adapted from OpenCV CMakeLists.txt
+# ----------------------------------------------------------------------------
+
+
+set(BUILD_SWIG_PYTHON_SUPPORT ON CACHE BOOL "Build with SWIG-based Python support")
+
+
+if(BUILD_SWIG_PYTHON_SUPPORT)
+    find_package(PythonInterp)
+    find_package(PythonLibs)
+
+    # cmake 2.4 (at least on Ubuntu 8.04 (hardy)) don't define PYTHONLIBS_FOUND
+    if(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+        set(PYTHONLIBS_FOUND ON)
+    endif(NOT PYTHONLIBS_FOUND AND PYTHON_INCLUDE_PATH)
+        
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} --version
+              ERROR_VARIABLE PYTHON_VERSION_FULL
+              OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    string(REGEX MATCH "[0-9].[0-9]" PYTHON_VERSION_MAJOR_MINOR "${PYTHON_VERSION_FULL}")
+    if(UNIX)
+        set(PYTHON_PLUGIN_INSTALL_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages/cvblob)
+        set(PYTHON_PACKAGES_PATH lib/python${PYTHON_VERSION_MAJOR_MINOR}/site-packages)
+    endif()
+    if(WIN32)
+        get_filename_component(PYTHON_PATH "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Python\\PythonCore\\${PYTHON_VERSION_MAJOR_MINOR}\\InstallPath]" ABSOLUTE CACHE)
+        set(PYTHON_PLUGIN_INSTALL_PATH "${PYTHON_PATH}/Lib/site-packages/cvblob")
+        set(PYTHON_PACKAGES_PATH "${PYTHON_PATH}/Lib/site-packages")
+    endif()
+
+endif()
+    
+if(PYTHONLIBS_FOUND AND BUILD_SWIG_PYTHON_SUPPORT)
+    find_package(SWIG)
+endif()
+
+# ----------------------------------------------------------------------------
+
 set(PACKAGE cvBlob)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMakeScripts)
@@ -40,6 +82,7 @@ set(CMAKE_BUILD_TYPE Release)
 add_subdirectory(cvBlob lib)
 #add_subdirectory(pyCvBlob pyCvBlob)
 add_subdirectory(test test)
+add_subdirectory(interfaces)
 
 set(prefix  ${CMAKE_INSTALL_PREFIX})
 set(version ${CVBLOB_VERSION})
