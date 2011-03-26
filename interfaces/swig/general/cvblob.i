@@ -650,3 +650,19 @@ This issue has been reported as a bug to the SWIG sourceforge bugtracker:
 // ---- Instantiate CvChainCodes template -----
 %template(CvChainCodes) std::list<cvb::CvChainCode>; 
 
+
+%pythoncode 
+%{
+
+__doc__ = """
+cvBlob is a computer vision library designed to detect connected
+regions in binary digital images. cvBlob performs connected
+component analysis (also known as labeling) and features extraction.
+
+This wrapper was automatically created from the C/C++ headers
+using SWIG, and therefore contains little Python documentation.
+All identifiers are identical or similar to their C/C++
+counterparts, so please refer to the cvBlob C/C++
+documentation for details."""
+
+%}
