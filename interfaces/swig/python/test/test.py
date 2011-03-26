@@ -18,7 +18,7 @@
 #
 
 # ----------------------------------------------------------------------------------
-# NOTE
+# NOTE - zorzalzilba  
 # This file is a python version of the original C++ test/test.cpp
 # Where possible, python code is listed along side the original line(s) of C++ code.
 # ----------------------------------------------------------------------------------
@@ -52,7 +52,9 @@ labelImg = cv.CreateImage(cv.GetSize(grey), IPL_DEPTH_LABEL, 1)
 blobs = cvblob.CvBlobs()
 
 #unsigned int result = cvLabel(grey, labelImg, blobs);
-#
+result = cvblob.cvLabel(grey,labelImg,blobs)
+
+
 #IplImage *imgOut = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 3); cvZero(imgOut);
 #cvRenderBlobs(labelImg, blobs, img, imgOut);
 #
