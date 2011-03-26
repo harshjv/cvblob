@@ -1,5 +1,6 @@
 # ----------------------------------------------------------------------------
 #  CMake file for python support
+#  (adapted from OpenCV interfaces/swig/python/CMakeLists.txt)
 # ----------------------------------------------------------------------------
 project(python_support)
 
@@ -38,5 +39,22 @@ if(APPLE)
 endif(APPLE)
 
 # ------------------------------ installation ----------------------------------
+
+
+get_target_property(LOC_CVBLOB ${SWIG_MODULE_cvblob_REAL_NAME} LOCATION)
+string(REPLACE "\$(OutDir)" "\${CMAKE_INSTALL_CONFIG_NAME}" m1 ${LOC_CVBLOB})
+
+set(pycvblob_files ${LOC_CVBLOB} ${CMAKE_CURRENT_BINARY_DIR}/cvblob.py)
+
+
+if(WIN32)
+    install(FILES ${pycvblob_files} 
+            DESTINATION "Python${PYTHON_VERSION_MAJOR_MINOR}/Lib/site-packages/cvblob"
+            COMPONENT main)
+else()
+    install(FILES ${pycvblob_files}
+           DESTINATION ${PYTHON_PLUGIN_INSTALL_PATH}
+           COMPONENT main)
+endif()
 
 
